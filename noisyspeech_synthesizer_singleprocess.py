@@ -31,9 +31,9 @@ np.random.seed(5)
 random.seed(5)
 
 def add_pyreverb(clean_speech, rir):
-    
+
     reverb_speech = signal.fftconvolve(clean_speech, rir, mode="full")
-    
+
     # make reverb_speech same length as clean_speech
     reverb_speech = reverb_speech[0 : clean_speech.shape[0]]
 
@@ -171,17 +171,23 @@ def main_gen(params):
         clean, clean_sf, clean_cf, clean_laf, clean_index = \
             gen_audio(True, params, clean_index)
 
-        # add reverb with selected RIR
+        not_gen = True
         rir_index = random.randint(0,len(params['myrir'])-1)
-        
-        my_rir = os.path.normpath(os.path.join('datasets', 'impulse_responses', params['myrir'][rir_index]))
-        (fs_rir,samples_rir) = wavfile.read(my_rir)
+        while not_gen:
+            try:
+                # add reverb with selected RIR
 
-        my_channel = int(params['mychannel'][rir_index])
-        
+                my_rir = os.path.normpath(os.path.join('/',params['myrir'][rir_index]))
+                (fs_rir,samples_rir) = wavfile.read(my_rir)
+
+                my_channel = int(params['mychannel'][rir_index])
+                not_gen = False
+            except FileNotFoundError:
+                rir_index = random.randint(0,len(params['myrir'])-1)
+
         if samples_rir.ndim==1:
             samples_rir_ch = np.array(samples_rir)
-            
+
         elif my_channel > 1:
             samples_rir_ch = samples_rir[:, my_channel -1]
         else:
@@ -220,10 +226,10 @@ def main_gen(params):
         #                                                          noise=noise, 
         #                                                         snr=snr)
         # unexpected clipping
-        if is_clipped(clean_snr) or is_clipped(noise_snr) or is_clipped(noisy_snr):
-            print("Warning: File #" + str(file_num) + " has unexpected clipping, " + \
-                  "returning without writing audio to disk")
-            continue
+        #if is_clipped(clean_snr) or is_clipped(noise_snr) or is_clipped(noisy_snr):
+        #    print("Warning: File #" + str(file_num) + " has unexpected clipping, " + \
+        #          "returning without writing audio to disk")
+        #    continue
 
         clean_source_files += clean_sf
         noise_source_files += noise_sf
@@ -250,6 +256,7 @@ def main_gen(params):
         file_num += 1
         for i in range(len(audio_signals)):
             try:
+                print(file_paths[i])
                 audiowrite(file_paths[i], audio_signals[i], params['fs'])
             except Exception as e:
                 print(str(e))
@@ -285,6 +292,7 @@ def main_body():
 
     if cfg['speech_dir'] != 'None':
         clean_dir = cfg['speech_dir']
+    print(clean_dir)
     if not os.path.exists(clean_dir):
         assert False, ('Clean speech data is required')
 
@@ -502,7 +510,7 @@ def main_body():
         myrir= [rir_wav2[i] for i in chosen_i]
         mychannel = [rir_channel2[i] for i in chosen_i]
         myt60 = [rir_t60_2[i] for i in chosen_i]
-
+    
     params['myrir'] = myrir
     params['mychannel'] = mychannel
     params['myt60'] = myt60

@@ -1,5 +1,3 @@
-datasets/
-datasets_fullband/
 training_set/
 training_set2/
 training_set2_onlyrealrir/
@@ -14,6 +12,3 @@ __pycache__/
 *~
 /.vs/
 /.vscode/
-*.wav
-*.tar.bz2
-*.zip
